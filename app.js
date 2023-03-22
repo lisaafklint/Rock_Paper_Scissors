@@ -4,47 +4,56 @@ const port = 3000;
 const bodyParser = require("body-parser");
 const { v4: uuid } = require("uuid");
 
-let games = [];
-
 app.use(bodyParser.json());
 
-app.post("/games", (req, res) => {
-  const gameId = uuid(); //generates an id for the game
+let listOfIncompleteGames = [];
+
+//POST to create a new game
+//Requires the players name in the request
+app.post("/newgame", (req, res) => {
+  //generates an unique id for the game
+  const gameId = uuid();
   const playerName = req.body.name;
 
   if (!playerName) {
-    return res.sendStatus(400);
+    return res.status(400).send("Please include the name of the player");
   }
 
   const game = {
     gameId: gameId,
     playerOne: playerName,
     playerTwo: "",
-    state: "uncompleated",
+    playerOneMove: "",
+    playerTwoMove: "",
+    game_completed: false,
   };
-  games.push(game);
 
-  res.status(201).json({
-    gameId: gameId,
-    playerName: playerName,
-  });
+  listOfIncompleteGames.push(game);
+  res
+    .status(201)
+    .send(`${playerName} Created a new game created with gameid: ${gameId}`);
 });
 
-app.get("/games/:gameId", (req, res) => {
+//Get to list all incomplete games
+app.get("/games", (req, res) => {
+  res.status(201).send(listOfIncompleteGames);
+});
+
+//GET the state of a specific game
+//Requires the gameid in the url
+app.get("/games/:gameId/state", (req, res) => {
   const gameId = req.params.gameId;
 
-  console.log(gameId);
-
   if (!gameId) {
-    return res.status(400).send("Enter gameId");
+    return res.status(400).send("Please enter the gameId into the url");
   }
-  for (let game of games) {
+  for (let game of listOfIncompleteGames) {
     if (game.gameId === gameId) {
       res.json(game);
       return;
     }
   }
-  res.status(404).send("Game not found");
+  res.status(404).send(`Game with gameId ${gameId} not found`);
 });
 
 //add so check if another player can join
@@ -53,36 +62,31 @@ app.post("/games/:gameId/join", (req, res) => {
   const playerName = req.body.name;
 
   if (!gameId) {
-    return res.status(400).send("Enter gameId");
+    return res.status(400).send("Enter gameId in the url");
+  }
+  if (!playerName) {
+    return res.status(400).send("Please include the name of the player");
   }
 
-  for (let game of games) {
+  for (let game of listOfIncompleteGames) {
     if (game.gameId === gameId) {
+      if (game.playerOne === playerName) {
+        return res
+          .status(400)
+          .send("The names of the players cannot be identical");
+      }
       game.playerTwo = playerName;
       res.json(game);
       return;
     }
   }
+  return res.status(400).send("Game not found");
 });
 
 app.post("/games/:gameId/play", (req, res) => {
   const gameId = req.params.gameId;
-  var playerOne = "";
-  var playerTwo = "";
-
-  const playerOneHand = req.body.playerOneHand;
-  const playerTwoHand = req.body.playerTwoHand;
-
-  if (!gameId) {
-    return res.status(400).send("Enter gameId");
-  }
-
-  for (let game of games) {
-    if (game.gameId === gameId) {
-      playerOne = game.playerOne;
-      playerTwo = game.playerTwo;
-    }
-  }
+  const playerName = req.body.name;
+  const playerMove = req.body.move;
 
   const winningHand = {
     rock: "scissors",
@@ -96,27 +100,48 @@ app.post("/games/:gameId/play", (req, res) => {
     paperrock: "paper covers rock",
   };
 
-  if (!playerOneHand || !playerTwoHand) {
-    return res.status(400).send("Please provide both players hand choice");
+  if (!gameId) {
+    return res.status(400).send("Enter gameId");
+  }
+  if (!playerMove || !playerName) {
+    return res
+      .status(400)
+      .send("Enter name and move of the player that wish to play");
   }
 
-  if (playerOneHand === playerTwoHand) {
-    return res.send("Game Tied");
-  }
+  for (let game of listOfIncompleteGames) {
+    if (game.gameId === gameId) {
+      if (game.playerOne === playerName) {
+        game.playerOneMove = playerMove;
+      } else if (game.playerTwo === playerName) {
+        game.playerTwoMove = playerMove;
+      } else {
+        return res.status(400).send("Name not found");
+      }
 
-  if (winningHand[playerOneHand] === playerTwoHand) {
-    return res.send({
-      winner: playerOne,
-      result: result[playerOneHand + playerTwoHand],
-    });
-  } else {
-    return res.send({
-      winner: playerTwo,
-      result: result[playerTwoHand + playerOneHand],
-    });
+      if (game.playerOneMove && game.playerTwoMove) {
+        //both have played
+        if (game.playerOneMove === game.playerTwoMove) {
+          return res.send("Game Tied");
+        }
+        if (winningHand[game.playerOneMove] === game.playerTwoMove) {
+          return res.send({
+            winner: game.playerOne,
+            result: result[game.playerOneMove + game.playerTwoMove],
+          });
+        } else {
+          return res.send({
+            winner: game.playerTwo,
+            result: result[game.playerTwoMove + game.playerOneMove],
+          });
+        }
+      } else {
+        return res.status(201).send("player did a move");
+      }
+    }
   }
 });
 
-app.listen(3000, () => {
-  console.log("Listening on port 3000!");
+app.listen(port, () => {
+  console.log(`Listening on port ${port}!`);
 });
