@@ -17,6 +17,8 @@
   },
   "homepage": "https://github.com/lisaafklint/Rock_Paper_Scissors#readme",
   "dependencies": {
-    "express": "^4.18.2"
+    "body-parser": "^1.20.2",
+    "express": "^4.18.2",
+    "uuid": "^9.0.0"
   }
 }
