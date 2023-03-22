@@ -1,6 +1,6 @@
 # Rock_Paper_Scissors
-##Description
-Eenter description
+## Description
+Enter description
 
 ## Getting started
 
