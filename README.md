@@ -23,3 +23,4 @@ Enter description
 5. To join an existing game, make a POST request to /games/:gameId/join, replacing :gameId with the ID of the game. Include the player's name in the request body. Example: { "name": "Anna" }.
 6. To play the game as a player, make a POST request to /games/:gameId/play, replacing :gameId with the ID of the game. Include the player's name and move in the request body. Example: { "name": "Adam", "move": "rock" }.
 
+## Motivation of tech
