@@ -33,3 +33,6 @@ You can access the REST API of the server using the following endpoints:
 
 
 ## Motivation of tech
+#### NodeJs: Node.js is an open-source,proxy server-side JavaScript runtime environment for building web applications. 
+#### Express: Express is a fast and flexible web application framework for Node.js. Express allows developers to create APIs quickly and easily.
+
