@@ -6,7 +6,7 @@ A REST API that lets developers resolve their differences using the game Rock, P
 
 ### Installation
 1. clone this repository to your local machine
-2. igate to the cloned directory
+2. navigate to the cloned directory
 3.  <code> npm install </code> 
 
 ### Start the REST API server
