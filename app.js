@@ -39,26 +39,24 @@ app.post("/newgame", (req, res) => {
     playerTwo: "",
     playerOneMove: "",
     playerTwoMove: "",
-    game_status: "Uncompleated",
+    game_status: "Uncompleted",
     game_result: "",
   };
 
   listOfGames.push(game);
   res.status(201).json({
     message: `${playerName} created a new game`,
-    data: {
-      gameId: gameId,
-    },
+    gameId: gameId,
   });
 });
 
 //Get to list all games
 app.get("/games", (req, res) => {
-  res.status(201).send(listOfGames);
+  res.status(201).json(listOfGames);
 });
 
 //GET the state of a specific game
-//Requires a given gameid
+//Requires a given gameId
 app.get("/games/:gameId/state", (req, res) => {
   const gameId = req.params.gameId;
 
@@ -99,7 +97,7 @@ app.get("/games/:gameId/state", (req, res) => {
 });
 
 //POST Joins an existing game
-//Requires a given gameid and name of player to join
+//Requires a given gameId and name of player to join
 app.post("/games/:gameId/join", (req, res) => {
   const gameId = req.params.gameId;
   const playerName = req.body.name;
@@ -133,10 +131,9 @@ app.post("/games/:gameId/join", (req, res) => {
         });
       }
       game.playerTwo = playerName;
-      res.status(201).json({
+      return res.status(201).json({
         message: `Player ${playerName} has joined the game wih gameID ${gameId}`,
       });
-      return;
     }
   }
   return res.status(400).json({
@@ -182,7 +179,7 @@ app.post("/games/:gameId/play", (req, res) => {
         game.playerTwoMove = playerMove;
         game.game_status = "playing";
       } else {
-        res.status(400).json({
+        return res.status(400).json({
           status: "Name not found",
           message:
             "The name sent in does not match any of the names of the player for the game with the given id",
@@ -192,7 +189,7 @@ app.post("/games/:gameId/play", (req, res) => {
       if (game.playerOneMove && game.playerTwoMove) {
         game.game_status = "Game completed";
         if (game.playerOneMove === game.playerTwoMove) {
-          game.result = "Game tied";
+          game.game_result = "Game tied";
           return res.status(201).json({
             message: "Game tied",
           });
@@ -201,6 +198,7 @@ app.post("/games/:gameId/play", (req, res) => {
           var gameResult = result[game.playerOneMove + game.playerTwoMove];
           game.game_result = `Winner ${game.playerOne}: ${gameResult}`;
           return res.status(201).json({
+            action: `${playerName} played ${playerMove}`,
             winner: game.playerOne,
             result: `${gameResult}`,
           });
@@ -208,6 +206,7 @@ app.post("/games/:gameId/play", (req, res) => {
           var gameResult = result[game.playerTwoMove + game.playerOneMove];
           game.game_result = `Winner ${game.playerTwo}: ${gameResult}`;
           return res.send({
+            action: `${playerName} played ${playerMove}`,
             winner: game.playerTwo,
             result: `${gameResult}`,
           });
