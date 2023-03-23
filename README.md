@@ -30,7 +30,6 @@ You can access the REST API of the server using the following endpoints:
 * <code> /games/:gameId/join </code> _replacing :gameId with the ID of the game_ : Joins an existing game. Include the player's name in the request body. Example: { "name": "Anna" }.
 * <code> /games/:gameId/play </code> _replacing :gameId with the ID of the game_. Plays the game as a player. Include the player's name and move in the request body. Example: { "name": "Adam", "move": "rock" }.
 
-Large Number of Packages: With over 1 million packages in the Node Package Manager (NPM), developers can leverage existing packages to add functionality to their REST API without reinventing the wheel. 
 
 ## Motivation of tech
 #### NodeJs: 
