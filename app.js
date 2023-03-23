@@ -6,7 +6,21 @@ const { v4: uuid } = require("uuid");
 
 app.use(bodyParser.json());
 
-let listOfIncompleteGames = [];
+let listOfGames = [];
+
+const allowedMoves = ["rock", "paper", "scissors"];
+
+const winningMove = {
+  rock: "scissors",
+  scissors: "paper",
+  paper: "rock",
+};
+
+const result = {
+  rockscissors: "rock crushes scissors",
+  scissorspaper: "scissors cuts paper",
+  paperrock: "paper covers rock",
+};
 
 //POST to create a new game
 //Requires the players name in the request
@@ -25,121 +39,188 @@ app.post("/newgame", (req, res) => {
     playerTwo: "",
     playerOneMove: "",
     playerTwoMove: "",
-    game_completed: false,
+    game_status: "Uncompleated",
+    game_result: "",
   };
 
-  listOfIncompleteGames.push(game);
-  res
-    .status(201)
-    .send(`${playerName} Created a new game created with gameid: ${gameId}`);
+  listOfGames.push(game);
+  res.status(201).json({
+    message: `${playerName} created a new game`,
+    data: {
+      gameId: gameId,
+    },
+  });
 });
 
-//Get to list all incomplete games
+//Get to list all games
 app.get("/games", (req, res) => {
-  res.status(201).send(listOfIncompleteGames);
+  res.status(201).send(listOfGames);
 });
 
 //GET the state of a specific game
-//Requires the gameid in the url
+//Requires a given gameid
 app.get("/games/:gameId/state", (req, res) => {
   const gameId = req.params.gameId;
 
   if (!gameId) {
-    return res.status(400).send("Please enter the gameId into the url");
+    return res.status(400).json({
+      status: "Missing gameId",
+      message: "Please enter the gameId",
+    });
   }
-  for (let game of listOfIncompleteGames) {
+  for (let game of listOfGames) {
     if (game.gameId === gameId) {
-      res.json(game);
-      return;
+      if (game.game_result) {
+        return res.status(201).json({
+          message: `Game with gameId ${gameId} found`,
+          data: {
+            gameId: gameId,
+            playerOne: game.playerOne,
+            playerTwo: game.playerTwo,
+            game_result: game.game_result,
+          },
+        });
+      }
+      return res.status(201).json({
+        message: `Game with gameId ${gameId} found`,
+        data: {
+          gameId: gameId,
+          playerOne: game.playerOne,
+          playerTwo: game.playerTwo,
+          game_status: game.game_status,
+        },
+      });
     }
   }
-  res.status(404).send(`Game with gameId ${gameId} not found`);
+  res.status(404).json({
+    status: "Game not found",
+    message: `Game with gameId ${gameId} not found`,
+  });
 });
 
-//add so check if another player can join
+//POST Joins an existing game
+//Requires a given gameid and name of player to join
 app.post("/games/:gameId/join", (req, res) => {
   const gameId = req.params.gameId;
   const playerName = req.body.name;
 
   if (!gameId) {
-    return res.status(400).send("Enter gameId in the url");
+    return res.status(400).json({
+      status: "Missing gameId",
+      message: "Please enter the gameId",
+    });
   }
   if (!playerName) {
-    return res.status(400).send("Please include the name of the player");
+    return res.status(400).json({
+      status: "Missing player name",
+      message:
+        "Please enter the name of the player that wants to join in the request",
+    });
   }
 
-  for (let game of listOfIncompleteGames) {
+  for (let game of listOfGames) {
     if (game.gameId === gameId) {
       if (game.playerOne === playerName) {
-        return res
-          .status(400)
-          .send("The names of the players cannot be identical");
+        return res.status(400).json({
+          status: "Identical player names",
+          message: "The names of the players cannot be identical",
+        });
+      }
+      if (game.playerTwo) {
+        return res.status(400).json({
+          status: "Game full",
+          message: "This game has reached its maximum number of players",
+        });
       }
       game.playerTwo = playerName;
-      res.json(game);
+      res.status(201).json({
+        message: `Player ${playerName} has joined the game wih gameID ${gameId}`,
+      });
       return;
     }
   }
-  return res.status(400).send("Game not found");
+  return res.status(400).json({
+    status: "Game not found",
+    message: `Game with gameId ${gameId} not found`,
+  });
 });
 
+//POST play the game
+//Requires a given gameId and the name and move of a player in the request
 app.post("/games/:gameId/play", (req, res) => {
   const gameId = req.params.gameId;
   const playerName = req.body.name;
   const playerMove = req.body.move;
 
-  const winningHand = {
-    rock: "scissors",
-    scissors: "paper",
-    paper: "rock",
-  };
-
-  const result = {
-    rockscissors: "rock crushes scissors",
-    scissorspaper: "scissors cuts paper",
-    paperrock: "paper covers rock",
-  };
-
   if (!gameId) {
-    return res.status(400).send("Enter gameId");
+    return res.status(400).json({
+      status: "Missing gameId",
+      message: "Please enter the gameId",
+    });
   }
-  if (!playerMove || !playerName) {
-    return res
-      .status(400)
-      .send("Enter name and move of the player that wish to play");
+  if (!playerName || !playerMove) {
+    return res.status(400).json({
+      status: "Missing info",
+      message:
+        "Please enter the name and move of the player that wants to play in the request",
+    });
   }
 
-  for (let game of listOfIncompleteGames) {
+  if (!allowedMoves.includes(playerMove)) {
+    return res.status(400).json({
+      status: "Illegal move",
+      message: "Please enter a move that is either rock, paper or scissors",
+    });
+  }
+
+  for (let game of listOfGames) {
     if (game.gameId === gameId) {
       if (game.playerOne === playerName) {
         game.playerOneMove = playerMove;
+        game.game_status = "playing";
       } else if (game.playerTwo === playerName) {
         game.playerTwoMove = playerMove;
+        game.game_status = "playing";
       } else {
-        return res.status(400).send("Name not found");
+        res.status(400).json({
+          status: "Name not found",
+          message:
+            "The name sent in does not match any of the names of the player for the game with the given id",
+        });
       }
 
       if (game.playerOneMove && game.playerTwoMove) {
-        //both have played
+        game.game_status = "Game completed";
         if (game.playerOneMove === game.playerTwoMove) {
-          return res.send("Game Tied");
+          game.result = "Game tied";
+          return res.status(201).json({
+            message: "Game tied",
+          });
         }
-        if (winningHand[game.playerOneMove] === game.playerTwoMove) {
-          return res.send({
+        if (winningMove[game.playerOneMove] === game.playerTwoMove) {
+          var gameResult = result[game.playerOneMove + game.playerTwoMove];
+          game.game_result = `Winner ${game.playerOne}: ${gameResult}`;
+          return res.status(201).json({
             winner: game.playerOne,
-            result: result[game.playerOneMove + game.playerTwoMove],
+            result: `${gameResult}`,
           });
         } else {
+          var gameResult = result[game.playerTwoMove + game.playerOneMove];
+          game.game_result = `Winner ${game.playerTwo}: ${gameResult}`;
           return res.send({
             winner: game.playerTwo,
-            result: result[game.playerTwoMove + game.playerOneMove],
+            result: `${gameResult}`,
           });
         }
       } else {
-        return res.status(201).send("player did a move");
+        return res.status(201).json(`${playerName} played ${playerMove}`);
       }
     }
   }
+  return res.status(400).json({
+    status: "Game not found",
+    message: `Game with gameId ${gameId} not found`,
+  });
 });
 
 app.listen(port, () => {
