@@ -24,12 +24,12 @@ You can access the REST API of the server using the following endpoints:
 
 #### <code> GET </code> 
 * <code> /games </code> : Lists all games
-* <code> /games/:gameId/state </code> replacing :gameId with the desired game ID : Get the state of a specific game
+* <code> /games/:gameId/state </code> _replacing :gameId with the desired game ID_ : Get the state of a specific game
 
 #### <code> POST </code> 
 * <code>/newgame</code> : Creates a new game with the player's name in the request body. Example: { "name": "Adam" }. The game is given a game ID
-* <code> /games/:gameId/join </code> replacing :gameId with the ID of the game : Joins an existing game. Include the player's name in the request body. Example: { "name": "Anna" }.
-<code> /games/:gameId/play </code>, replacing :gameId with the ID of the game. Plays the game as a player. Include the player's name and move in the request body. Example: { "name": "Adam", "move": "rock" }.
+* <code> /games/:gameId/join </code> _replacing :gameId with the ID of the game_ : Joins an existing game. Include the player's name in the request body. Example: { "name": "Anna" }.
+* <code> /games/:gameId/play </code> _replacing :gameId with the ID of the game_. Plays the game as a player. Include the player's name and move in the request body. Example: { "name": "Adam", "move": "rock" }.
 
 
 ## Motivation of tech
