@@ -11,6 +11,7 @@ A REST API that lets developers resolve their differences using the game Rock, P
 
 ### Start the REST API server
 Start the server by running <code> npm start </code>
+
 The server is now running on [http://localhost:3000](http://localhost:3000)
 
 ### Dependencies
@@ -19,6 +20,8 @@ The server is now running on [http://localhost:3000](http://localhost:3000)
 * uuid
 
 ### Using the REST API
+Use a REST client to test the API. Popular and free frameworks are Postman and Insomnia.
+
 You can access the REST API of the server using the following endpoints:
 
 #### <code> GET </code> 
